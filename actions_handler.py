@@ -63,9 +63,7 @@ def buttons_and_text_messages_handling(message: telebot.types.Message):
 
 bot.infinity_polling()
 
-# todo: preload viewable content at start (through file ids)
-# todo: move project to git or space
 # todo: create questionnaires
 # todo: add scrolling for content
+# todo: switch database to sqlite and merge preloading with database
 # todo: improve landing
-# todo: switch database to sqlite
