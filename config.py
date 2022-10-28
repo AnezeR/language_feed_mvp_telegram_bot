@@ -9,3 +9,5 @@ class Config:
         self.mariadb_user = config_file['mariadb_user']
         self.mariadb_password = config_file['mariadb_password']
         self.mariadb_database = config_file['mariadb_database']
+
+        self.current_content = config_file['current_content']
