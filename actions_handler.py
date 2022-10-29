@@ -63,7 +63,7 @@ def buttons_and_text_messages_handling(message: telebot.types.Message):
 
 bot.infinity_polling()
 
-# todo: create questionnaires
 # todo: add scrolling for content
-# todo: switch database to sqlite and merge preloading with database
+# todo: create questionnaires
 # todo: improve landing
+# todo: switch database to sqlite and merge preloading with database

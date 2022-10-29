@@ -186,6 +186,37 @@ class ChoosingLanguageLayout(Layout):
         return '', choosing_language
 
 
+class LookingAtLikesLayout(Layout):
+    def __init__(self, strings: dict[str, str], tg_user_id: int, bot: TeleBot, database: Database, preload: ContentPreload):
+        Layout.__init__(self, strings)
+
+        self.database = database
+        self.bot = bot
+        self.preload = preload
+
+        user_likes = self.database.get_likes_for_user(tg_user_id)
+        current_page = self.database.get_current_likes_page_for_user(tg_user_id)
+
+        if user_likes:
+            self._default_message = self.strings['here_are_your_likes']  # todo: add likes messages to strings
+            self._keyboard_markup.row(self.strings['return_to_the_main_menu'])
+
+            beginning = current_page * 5
+            end = beginning + 5
+
+            if beginning > 0:
+                self._keyboard_markup.add(self.strings['previous_page'])  # todo: add previous page to strings
+            if end < len(user_likes):
+                self._keyboard_markup.add(self.strings['next_page'])  # todo: add next page to strings
+
+
+
+        else:
+            self._default_message = self.strings['no_likes']  # todo: add no likes messages to strings
+
+    def reply_to_prompt(self, message: Message) -> tuple[str, int]:
+        pass  # todo: finish replying to prompt with likes
+
 def pick_layout(layout_id: int, tg_user_id: int, full_name: str, bot: TeleBot, database: Database, preload: ContentPreload) -> Layout:
     strings = get_strings_for_user(database, tg_user_id)
 

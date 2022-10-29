@@ -131,6 +131,16 @@ class Database:
             cursor.execute("DELETE FROM likes WHERE (tg_user_id, content_id) = (?, ?)", (tg_user_id, content_id))
             self.__conn.commit()
 
+    def get_current_likes_page_for_user(self, tg_user_id: int) -> int:
+        with self.__conn.cursor() as cursor:
+            cursor.execute("SELECT current_likes_page FROM tg_users WHERE tg_user_id = ?", (tg_user_id,))
+            return cursor.fetchone()[0]
+
+    def set_current_likes_page_for_user(self, tg_user_id: int, page: int) -> None:
+        with self.__conn.cursor() as cursor:
+            cursor.execute("UPDATE tg_users SET current_likes_page = ? WHERE tg_user_id = ?", (page, tg_user_id))
+            self.__conn.commit()
+
     def get_content_types(self) -> list[str]:
         with self.__conn.cursor() as cursor:
             cursor.execute("SELECT type FROM content_types;")
