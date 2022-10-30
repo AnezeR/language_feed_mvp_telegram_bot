@@ -61,13 +61,16 @@ class MainMenuLayout(Layout):
             )
             return self.strings['feed_for_today_thing'] + self.tg_user_name, main_menu
         elif message.text == self.strings['likes']:
-            send_likes_for_user(
-                bot=self.bot,
-                db=self.database,
-                tg_user_id=message.from_user.id,
-                preload=self.preload
-            )
-            return self.strings['likes_thing'] + self.tg_user_name, main_menu
+            if self.database.get_likes_for_user(message.from_user.id):
+                send_likes_for_user(
+                    bot=self.bot,
+                    db=self.database,
+                    preload=self.preload,
+                    tg_user_id=message.from_user.id
+                )
+                return '', look_at_likes
+            else:
+                return self.strings['no_likes'], main_menu
         elif message.text == self.strings['settings']:
             return '', settings
 
@@ -187,7 +190,7 @@ class ChoosingLanguageLayout(Layout):
 
 
 class LookingAtLikesLayout(Layout):
-    def __init__(self, strings: dict[str, str], tg_user_id: int, bot: TeleBot, database: Database, preload: ContentPreload):
+    def __init__(self, strings: dict[str, str], tg_user_id: int, full_name: str, bot: TeleBot, database: Database, preload: ContentPreload):
         Layout.__init__(self, strings)
 
         self.database = database
@@ -195,27 +198,40 @@ class LookingAtLikesLayout(Layout):
         self.preload = preload
 
         user_likes = self.database.get_likes_for_user(tg_user_id)
-        current_page = self.database.get_current_likes_page_for_user(tg_user_id)
+        self.current_page = self.database.get_current_likes_page_for_user(tg_user_id)
+
+        self._keyboard_markup.row(self.strings['return_to_the_main_menu'])
 
         if user_likes:
-            self._default_message = self.strings['here_are_your_likes']  # todo: add likes messages to strings
-            self._keyboard_markup.row(self.strings['return_to_the_main_menu'])
+            self._default_message = self.strings['here_are_your_likes'] + full_name
 
-            beginning = current_page * 5
-            end = beginning + 5
+            beginning = self.current_page * 3
+            end = beginning + 3
 
-            if beginning > 0:
-                self._keyboard_markup.add(self.strings['previous_page'])  # todo: add previous page to strings
-            if end < len(user_likes):
-                self._keyboard_markup.add(self.strings['next_page'])  # todo: add next page to strings
-
-
-
+            if beginning > 0 and end < len(user_likes):
+                self._keyboard_markup.row(self.strings['previous_page'], self.strings['next_page'])
+            elif beginning > 0:
+                self._keyboard_markup.row(self.strings['previous_page'])
+            elif end < len(user_likes):
+                self._keyboard_markup.row(self.strings['next_page'])
         else:
-            self._default_message = self.strings['no_likes']  # todo: add no likes messages to strings
+            self._default_message = self.strings['no_likes']
 
     def reply_to_prompt(self, message: Message) -> tuple[str, int]:
-        pass  # todo: finish replying to prompt with likes
+        if message.text == self.strings['return_to_the_main_menu']:
+            return '', main_menu
+        if message.text == self.strings['next_page']:
+            self.database.set_current_likes_page_for_user(message.from_user.id, self.current_page + 1)
+        if message.text == self.strings['previous_page']:
+            self.database.set_current_likes_page_for_user(message.from_user.id, self.current_page - 1)
+        send_likes_for_user(
+            bot=self.bot,
+            db=self.database,
+            preload=self.preload,
+            tg_user_id=message.from_user.id
+        )
+        return '', look_at_likes
+
 
 def pick_layout(layout_id: int, tg_user_id: int, full_name: str, bot: TeleBot, database: Database, preload: ContentPreload) -> Layout:
     strings = get_strings_for_user(database, tg_user_id)
@@ -232,5 +248,7 @@ def pick_layout(layout_id: int, tg_user_id: int, full_name: str, bot: TeleBot, d
         return ChoosingPreferencesLayout(strings, tg_user_id, bot, database, preload)
     if layout_id == look_at_content:
         return LookAtContentLayout(strings, tg_user_id, database)
+    if layout_id == look_at_likes:
+        return LookingAtLikesLayout(strings, tg_user_id, full_name, bot, database, preload)
 
     return MainMenuLayout(strings, full_name, bot, database, preload)

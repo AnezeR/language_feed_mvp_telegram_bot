@@ -19,8 +19,7 @@ def send_daily_content_for_user(bot: TeleBot, db: Database, preload: ContentPrel
 
 
 def send_likes_for_user(bot: TeleBot, db: Database, preload: ContentPreload, tg_user_id: int) -> None:
-    # todo: send likes with pages
-    for content_id in db.get_likes_for_user(tg_user_id):
+    for content_id in db.get_likes_for_current_page(tg_user_id):
         layout = ContentLayout(
             content_id=content_id,
             tg_user_id=tg_user_id,

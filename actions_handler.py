@@ -38,7 +38,7 @@ def inline_buttons_handling(call: telebot.types.CallbackQuery):
 @bot.message_handler(func=lambda m: True)
 def buttons_and_text_messages_handling(message: telebot.types.Message):
     if not database.user_exists(message.from_user.id):
-        database.create_user(message.from_user.id, message.chat.id)
+        database.create_user(message.from_user.id)
 
         layout = page_layouts.pick_layout(database.get_user_layout(message.from_user.id), message.from_user.id,
                                           message.from_user.full_name, bot, database, preloaded_content)
@@ -63,7 +63,7 @@ def buttons_and_text_messages_handling(message: telebot.types.Message):
 
 bot.infinity_polling()
 
-# todo: add scrolling for content
 # todo: create questionnaires
 # todo: improve landing
 # todo: switch database to sqlite and merge preloading with database
+# todo: figure out what to do with removing likes when scrolling them

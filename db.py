@@ -43,9 +43,9 @@ class Database:
             cursor.execute("SELECT tg_user_id FROM tg_users WHERE tg_user_id = ?", (tg_user_id,))
             return bool(len(cursor.fetchall()))
 
-    def create_user(self, tg_user_id: int, chat_id: int) -> None:
+    def create_user(self, tg_user_id: int) -> None:
         with self.__conn.cursor() as cursor:
-            cursor.execute("INSERT INTO tg_users (tg_user_id, chat_id) VALUES (?, ?)", (tg_user_id, chat_id))
+            cursor.execute("INSERT INTO tg_users (tg_user_id) VALUES (?)", (tg_user_id,))
             self.__conn.commit()
 
     def increase_feed_day_for_user(self, tg_user_id: int) -> None:
@@ -72,11 +72,6 @@ class Database:
         with self.__conn.cursor() as cursor:
             cursor.execute("UPDATE tg_users SET ui_language = ? WHERE tg_user_id = ?", (language, tg_user_id))
             self.__conn.commit()
-
-    def get_chat_id_for_user(self, tg_user_id):
-        with self.__conn.cursor() as cursor:
-            cursor.execute("SELECT chat_id FROM tg_users WHERE tg_user_id = ?", (tg_user_id,))
-            return cursor.fetchone()[0]
 
     def get_user_layout(self, tg_user_id: int) -> int:
         with self.__conn.cursor() as cursor:
@@ -140,6 +135,20 @@ class Database:
         with self.__conn.cursor() as cursor:
             cursor.execute("UPDATE tg_users SET current_likes_page = ? WHERE tg_user_id = ?", (page, tg_user_id))
             self.__conn.commit()
+
+    def get_likes_for_current_page(self, tg_user_id: int) -> list[int]:
+        with self.__conn.cursor() as cursor:
+            current_page = self.get_current_likes_page_for_user(tg_user_id)
+            cursor.execute(
+                """
+                SELECT content_id FROM likes
+                WHERE tg_user_id = ?
+                ORDER BY content_id
+                LIMIT 3 OFFSET ?
+                """,
+                (tg_user_id, current_page * 3)
+            )
+            return [content[0] for content in cursor.fetchall()]
 
     def get_content_types(self) -> list[str]:
         with self.__conn.cursor() as cursor:

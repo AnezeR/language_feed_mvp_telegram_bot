@@ -7,7 +7,6 @@
   "main_menu_thing": "This is your Language Feed, ",
   "settings": "Settings",
   "likes": "Likes",
-  "likes_thing": "These are your likes, ",
   "feed_for_today": "Your feed for today",
   "feed_for_today_thing": "This is your feed for today, ",
   "setting_page_thing": "These are your settings, ",
@@ -20,5 +19,9 @@
   "return_to_settings": "Return to settings",
   "do_you_like_this_type_of_content": "Press the like button if you like this type of content",
   "you_do_like_this_type_of_content": "You liked this type of content",
-  "look_at_other_content": "Look at other content"
+  "look_at_other_content": "Look at other content",
+  "here_are_your_likes": "Here are your likes, ",
+  "no_likes": "You have no likes yet",
+  "next_page": "Next page",
+  "previous_page": "Previous page"
 }

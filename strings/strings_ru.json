@@ -7,7 +7,6 @@
   "main_menu_thing": "Это твой языковой фид, ",
   "settings": "Настройки",
   "likes": "Лайки",
-  "likes_thing": "Это ваши лайки, ",
   "feed_for_today": "Сегодняшний фид",
   "feed_for_today_thing": "Это ваш сегодняшний фид, ",
   "setting_page_thing": "Это ваши настройки, ",
@@ -20,5 +19,9 @@
   "return_to_settings": "Вернуться к настройкам",
   "do_you_like_this_type_of_content": "Нажмите кнопку лайка, если вам нравится такой контент",
   "you_do_like_this_type_of_content": "Вы поставили нравится такому контенту",
-  "look_at_other_content": "Посмотреть другое"
+  "look_at_other_content": "Посмотреть другое",
+  "here_are_your_likes": "Это ваши лайки, ",
+  "no_likes": "У вас ещё нет лайков",
+  "next_page": "Следующая страница",
+  "previous_page": "Предыдущая страница"
 }
