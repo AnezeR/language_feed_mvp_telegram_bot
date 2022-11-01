@@ -118,7 +118,7 @@ class Database:
 
     def set_like_for_user(self, tg_user_id: int, content_id: int) -> None:
         with self.__conn.cursor() as cursor:
-            cursor.execute("INSERT INTO likes (tg_user_id, content_id) VALUES (?, ?)", (tg_user_id, content_id))
+            cursor.execute("INSERT INTO likes (tg_user_id, content_id, like_date) VALUES (?, ?, NOW())", (tg_user_id, content_id))
             self.__conn.commit()
 
     def remove_like_for_user(self, tg_user_id: int, content_id: int) -> None:
@@ -143,7 +143,7 @@ class Database:
                 """
                 SELECT content_id FROM likes
                 WHERE tg_user_id = ?
-                ORDER BY content_id
+                ORDER BY like_date DESC
                 LIMIT 3 OFFSET ?
                 """,
                 (tg_user_id, current_page * 3)
