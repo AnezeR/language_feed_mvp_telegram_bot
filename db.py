@@ -83,6 +83,27 @@ class Database:
             cursor.execute("UPDATE tg_users SET current_layout_id = ? WHERE tg_user_id = ?", (layout_id, tg_user_id))
             self.__conn.commit()
 
+    def get_additional_content_for_user(self, tg_user_id: int) -> list[int]:
+        with self.__conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT (
+                    SELECT content_id FROM type_content_days
+                    WHERE
+                        day_of_feed = (SELECT day_of_feed FROM tg_users WHERE tg_user_id = ?)
+                        AND content_type = type
+                    ORDER BY RAND()
+                    LIMIT 1
+                ) FROM content_types
+                WHERE type NOT IN(
+                    SELECT content_type FROM content_preferences
+                    WHERE tg_user_id = ?
+                )
+                """,
+                (tg_user_id, tg_user_id)
+            )
+            return [content[0] for content in cursor.fetchall()]
+
     def get_content_for_user(self, tg_user_id: int) -> list[int]:
         with self.__conn.cursor() as cursor:
             cursor.execute(

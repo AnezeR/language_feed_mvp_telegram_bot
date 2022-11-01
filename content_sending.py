@@ -7,7 +7,7 @@ from preload import ContentPreload
 
 
 def send_daily_content_for_user(bot: TeleBot, db: Database, preload: ContentPreload, tg_user_id: int) -> None:
-    for content_id in db.get_content_for_user(tg_user_id):
+    for content_id in db.get_additional_content_for_user(tg_user_id) + db.get_content_for_user(tg_user_id):
         layout = ContentLayout(
             content_id=content_id,
             tg_user_id=tg_user_id,
