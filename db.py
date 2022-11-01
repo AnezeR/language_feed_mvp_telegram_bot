@@ -136,12 +136,27 @@ class Database:
             cursor.execute("UPDATE tg_users SET current_likes_page = ? WHERE tg_user_id = ?", (page, tg_user_id))
             self.__conn.commit()
 
+    def buffer_likes_for_user(self, tg_user_id: int) -> None:
+        with self.__conn.cursor() as cursor:
+            cursor.execute("INSERT INTO buffered_likes SELECT * FROM likes WHERE tg_user_id = ?", (tg_user_id,))
+            self.__conn.commit()
+
+    def delete_buffered_likes_for_user(self, tg_user_id: int) -> None:
+        with self.__conn.cursor() as cursor:
+            cursor.execute("DELETE FROM buffered_likes WHERE tg_user_id = ?", (tg_user_id,))
+            self.__conn.commit()
+
+    def get_buffered_likes_count_for_user(self, tg_user_id: int) -> int:
+        with self.__conn.cursor() as cursor:
+            cursor.execute("SELECT tg_user_id FROM buffered_likes WHERE tg_user_id = ?", (tg_user_id,))
+            return len(cursor.fetchall())
+
     def get_likes_for_current_page(self, tg_user_id: int) -> list[int]:
         with self.__conn.cursor() as cursor:
             current_page = self.get_current_likes_page_for_user(tg_user_id)
             cursor.execute(
                 """
-                SELECT content_id FROM likes
+                SELECT content_id FROM buffered_likes
                 WHERE tg_user_id = ?
                 ORDER BY like_date DESC
                 LIMIT 3 OFFSET ?

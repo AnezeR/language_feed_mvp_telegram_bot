@@ -61,7 +61,8 @@ class MainMenuLayout(Layout):
             )
             return self.strings['feed_for_today_thing'] + self.tg_user_name, main_menu
         elif message.text == self.strings['likes']:
-            if self.database.get_likes_for_user(message.from_user.id):
+            self.database.buffer_likes_for_user(message.from_user.id)
+            if self.database.get_buffered_likes_count_for_user(message.from_user.id):
                 send_likes_for_user(
                     bot=self.bot,
                     db=self.database,
@@ -197,28 +198,30 @@ class LookingAtLikesLayout(Layout):
         self.bot = bot
         self.preload = preload
 
-        user_likes = self.database.get_likes_for_user(tg_user_id)
+        number_of_likes = self.database.get_buffered_likes_count_for_user(tg_user_id)
         self.current_page = self.database.get_current_likes_page_for_user(tg_user_id)
 
         self._keyboard_markup.row(self.strings['return_to_the_main_menu'])
 
-        if user_likes:
+        if number_of_likes:
             self._default_message = self.strings['here_are_your_likes'] + full_name
 
             beginning = self.current_page * 3
             end = beginning + 3
 
-            if beginning > 0 and end < len(user_likes):
+            if beginning > 0 and end < number_of_likes:
                 self._keyboard_markup.row(self.strings['previous_page'], self.strings['next_page'])
             elif beginning > 0:
                 self._keyboard_markup.row(self.strings['previous_page'])
-            elif end < len(user_likes):
+            elif end < number_of_likes:
                 self._keyboard_markup.row(self.strings['next_page'])
         else:
             self._default_message = self.strings['no_likes']
 
     def reply_to_prompt(self, message: Message) -> tuple[str, int]:
         if message.text == self.strings['return_to_the_main_menu']:
+            self.database.set_current_likes_page_for_user(message.from_user.id, 0)
+            self.database.delete_buffered_likes_for_user(message.from_user.id)
             return '', main_menu
         if message.text == self.strings['next_page']:
             self.database.set_current_likes_page_for_user(message.from_user.id, self.current_page + 1)
