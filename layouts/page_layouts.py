@@ -232,8 +232,10 @@ class LookingAtLikesLayout(Layout):
             return '', main_menu
         if message.text == self.strings['next_page']:
             self.database.set_current_likes_page_for_user(message.from_user.id, self.current_page + 1)
+            return '', look_at_likes
         if message.text == self.strings['previous_page']:
             self.database.set_current_likes_page_for_user(message.from_user.id, self.current_page - 1)
+            return '', look_at_likes
         send_likes_for_user(
             strings=self.strings,
             bot=self.bot,
