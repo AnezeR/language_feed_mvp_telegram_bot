@@ -63,7 +63,6 @@ def buttons_and_text_messages_handling(message: telebot.types.Message):
 
 bot.infinity_polling()
 
-# todo: fix text for giving random content with daily feed
 # todo: create questionnaires
 # todo: improve landing
 # todo: switch database to sqlite and merge preloading with database
