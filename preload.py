@@ -31,5 +31,7 @@ class ContentPreload:
         with ThreadPoolExecutor(max_workers=10) as executor:
             executor.map(preload_content, preload_prerequisites)
 
+        print('Preload finished')
+
     def get_file_id_for_content_id(self, content_id: int) -> str:
         return self.preloaded_content[content_id]

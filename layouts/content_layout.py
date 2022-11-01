@@ -73,41 +73,73 @@ class ContentLayout(NoButtonsContentLayout):
                 callback_data=json.dumps(
                     {
                         'type': LayoutType.content.value,
-                        'val': '❤️' if self.liked else '🤍',
+                        'action': 'set_dislike' if self.liked else 'set_like',
                         'content_id': self.content_id
                     }
                 )
             )
         )
-
-    def handle_callback(self, call: CallbackQuery) -> None:
-        data = json.loads(call.data)
-
-        liked = data['val'] == '🤍'
-        liked_in_db = self.db.is_content_liked_by_user(self.tg_user_id, self.content_id)
-
-        if liked != liked_in_db:
-            if liked:
-                self.db.set_like_for_user(self.tg_user_id, self.content_id)
-            else:
-                self.db.remove_like_for_user(self.tg_user_id, self.content_id)
-
-            action = '❤' if liked else '🤍'
-            new_inline_markup = InlineKeyboardMarkup()
-            new_inline_markup.row(
+        content_type = self.db.get_content_types_for_content(self.content_id)[0]
+        if self.liked and not self.db.is_content_type_liked_by_user(self.tg_user_id, content_type):
+            self._inline_markup.row(
                 InlineKeyboardButton(
-                    action,
+                    f"This post is from {content_type}, press this button if you want to see more {content_type}!",
                     callback_data=json.dumps(
                         {
                             'type': LayoutType.content.value,
-                            'val': action,
+                            'action': content_type,
                             'content_id': self.content_id
                         }
                     )
                 )
             )
-            self.bot.edit_message_reply_markup(
-                chat_id=self.chat_id,
-                message_id=call.message.id,
-                reply_markup=new_inline_markup
+
+    def handle_callback(self, call: CallbackQuery) -> None:
+        # todo: refactor
+        data = json.loads(call.data)
+
+        if data['action'] in ('set_like', 'set_dislike'):
+            action = data['action']
+            liked_in_db = self.db.is_content_liked_by_user(self.tg_user_id, self.content_id)
+            if action == 'set_like' and not liked_in_db:
+                self.db.set_like_for_user(self.tg_user_id, self.content_id)
+            elif action == 'set_dislike' and liked_in_db:
+                self.db.remove_like_for_user(self.tg_user_id, self.content_id)
+        else:
+            self.db.like_a_content_type_for_user(self.tg_user_id, self.db.get_content_types_for_content(self.content_id)[0])
+
+        self.liked = self.db.is_content_liked_by_user(self.tg_user_id, self.content_id)
+
+        new_inline_markup = InlineKeyboardMarkup()
+        new_inline_markup.row(
+            InlineKeyboardButton(
+                '❤' if self.liked else '🤍',
+                callback_data=json.dumps(
+                    {
+                        'type': LayoutType.content.value,
+                        'action': 'set_dislike' if self.liked else 'set_like',
+                        'content_id': self.content_id
+                    }
+                )
             )
+        )
+        content_type = self.db.get_content_types_for_content(self.content_id)[0]
+        if self.liked and not self.db.is_content_type_liked_by_user(self.tg_user_id, content_type):
+            new_inline_markup.row(
+                InlineKeyboardButton(
+                    f"This post is from {content_type}, press this button if you want to see more {content_type}!",
+                    callback_data=json.dumps(
+                        {
+                            'type': LayoutType.content.value,
+                            'action': content_type,
+                            'content_id': self.content_id
+                        }
+                    )
+                )
+            )
+
+        self.bot.edit_message_reply_markup(
+            chat_id=self.chat_id,
+            message_id=call.message.id,
+            reply_markup=new_inline_markup
+        )
