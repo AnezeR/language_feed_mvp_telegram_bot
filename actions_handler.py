@@ -63,7 +63,7 @@ def buttons_and_text_messages_handling(message: telebot.types.Message):
 
 bot.infinity_polling()
 
-# todo: give random content to users with daily feed
+# todo: fix text for giving random content with daily feed
 # todo: add translation from russian to english
 # todo: create questionnaires
 # todo: improve landing
