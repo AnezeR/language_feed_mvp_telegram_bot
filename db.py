@@ -94,11 +94,7 @@ class Database:
                         AND content_type = type
                     ORDER BY RAND()
                     LIMIT 1
-                ) FROM content_types
-                WHERE type NOT IN(
-                    SELECT content_type FROM content_preferences
-                    WHERE tg_user_id = ?
-                )
+                ) FROM content_types WHERE type NOT IN(SELECT content_type FROM content_preferences WHERE tg_user_id = ?)
                 """,
                 (tg_user_id, tg_user_id)
             )
