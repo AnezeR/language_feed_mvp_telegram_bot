@@ -3,11 +3,12 @@ import sys
 
 import telebot
 
-from preload import ContentPreload
+from strings.strings import get_strings_for_user
 from config import Config
 from db import Database
 from layouts import page_layouts
-from layouts.content_layout import ContentLayout, LayoutType
+from layouts.content_layout import LayoutType, ContentLayout
+from preload import ContentPreload
 
 config = Config()
 try:
@@ -26,6 +27,7 @@ def inline_buttons_handling(call: telebot.types.CallbackQuery):
 
     if data['type'] == LayoutType.content.value:
         layout = ContentLayout(
+            strings=get_strings_for_user(database, call.from_user.id),
             content_id=data['content_id'],
             tg_user_id=call.from_user.id,
             bot=bot,
