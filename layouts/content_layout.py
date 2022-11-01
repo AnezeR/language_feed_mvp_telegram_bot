@@ -15,9 +15,10 @@ class LayoutType(Enum):
 
 
 class Layout:
-    def __init__(self):
+    def __init__(self, strings: dict[str, str]):
         self._inline_markup = InlineKeyboardMarkup()
         self._callback_data = {}
+        self.strings = strings
 
     def handle_callback(self, call: CallbackQuery) -> None:
         pass
@@ -27,8 +28,8 @@ class Layout:
 
 
 class NoButtonsContentLayout(Layout):
-    def __init__(self, content_id: int, bot: TeleBot, db: Database, tg_user_id: int, preload: ContentPreload):
-        Layout.__init__(self)
+    def __init__(self, strings: dict[str, str], content_id: int, bot: TeleBot, db: Database, tg_user_id: int, preload: ContentPreload):
+        Layout.__init__(self, strings)
 
         self.content_id = content_id
         self.db = db
@@ -61,15 +62,15 @@ class NoButtonsContentLayout(Layout):
 
 
 class ContentLayout(NoButtonsContentLayout):
-    def __init__(self, content_id: int, tg_user_id: int, bot: TeleBot, db: Database, preload: ContentPreload):
-        NoButtonsContentLayout.__init__(self, content_id, bot, db, tg_user_id, preload)
+    def __init__(self, strings: dict[str, str], content_id: int, tg_user_id: int, bot: TeleBot, db: Database, preload: ContentPreload):
+        NoButtonsContentLayout.__init__(self, strings, content_id, bot, db, tg_user_id, preload)
 
         self.tg_user_id = tg_user_id
 
         self.liked = db.is_content_liked_by_user(tg_user_id, content_id)
         self._inline_markup.row(
             InlineKeyboardButton(
-                '❤️' if self.liked else '🤍',
+                self.strings['liked'] if self.liked else self.strings['not_liked'],
                 callback_data=json.dumps(
                     {
                         'type': LayoutType.content.value,
@@ -83,7 +84,7 @@ class ContentLayout(NoButtonsContentLayout):
         if self.liked and not self.db.is_content_type_liked_by_user(self.tg_user_id, content_type):
             self._inline_markup.row(
                 InlineKeyboardButton(
-                    f"This post is from {content_type}, press this button if you want to see more {content_type}!",
+                    self.strings['see_more_of_this_content_1'] + content_type + self.strings['see_more_of_this_content_2'],
                     callback_data=json.dumps(
                         {
                             'type': LayoutType.content.value,
@@ -113,7 +114,7 @@ class ContentLayout(NoButtonsContentLayout):
         new_inline_markup = InlineKeyboardMarkup()
         new_inline_markup.row(
             InlineKeyboardButton(
-                '❤' if self.liked else '🤍',
+                self.strings['liked'] if self.liked else self.strings['not_liked'],
                 callback_data=json.dumps(
                     {
                         'type': LayoutType.content.value,
@@ -127,7 +128,7 @@ class ContentLayout(NoButtonsContentLayout):
         if self.liked and not self.db.is_content_type_liked_by_user(self.tg_user_id, content_type):
             new_inline_markup.row(
                 InlineKeyboardButton(
-                    f"This post is from {content_type}, press this button if you want to see more {content_type}!",
+                    self.strings['see_more_of_this_content_1'] + content_type + self.strings['see_more_of_this_content_2'],
                     callback_data=json.dumps(
                         {
                             'type': LayoutType.content.value,

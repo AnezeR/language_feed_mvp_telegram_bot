@@ -59,6 +59,7 @@ class MainMenuLayout(Layout):
     def reply_to_prompt(self, message: Message) -> tuple[str, int]:
         if message.text == self.strings['feed_for_today']:
             send_daily_content_for_user(
+                self.strings,
                 bot=self.bot,
                 db=self.database,
                 tg_user_id=message.from_user.id,
@@ -69,6 +70,7 @@ class MainMenuLayout(Layout):
             self.database.buffer_likes_for_user(message.from_user.id)
             if self.database.get_buffered_likes_count_for_user(message.from_user.id):
                 send_likes_for_user(
+                    self.strings,
                     bot=self.bot,
                     db=self.database,
                     preload=self.preload,
@@ -130,7 +132,7 @@ class ChoosingPreferencesLayout(Layout):
         if not self.database.are_there_zero_preferences(message.from_user.id):
             if self.first_time and message.text == self.strings['finish_setting_preferences']:
                 self.database.end_setting_preferences_and_set_first_day(message.from_user.id)
-                send_daily_content_for_user(self.bot, self.database, self.preload, message.from_user.id)
+                send_daily_content_for_user(self.strings, self.bot, self.database, self.preload, message.from_user.id)
                 return '', main_menu
             if (not self.first_time) and message.text == self.strings['return_to_settings']:
                 return '', settings
@@ -142,7 +144,7 @@ class ChoosingPreferencesLayout(Layout):
 
             if message.text == check_string:
                 self.database.set_user_looking_at_content_type(message.from_user.id, preference)
-                send_test_content_for_content_type(self.bot, self.database, self.preload, message.from_user.id, preference)
+                send_test_content_for_content_type(self.strings, self.bot, self.database, self.preload, message.from_user.id, preference)
                 return '', look_at_content
         return translate_text(message.text), choosing_preferences
 
@@ -233,6 +235,7 @@ class LookingAtLikesLayout(Layout):
         if message.text == self.strings['previous_page']:
             self.database.set_current_likes_page_for_user(message.from_user.id, self.current_page - 1)
         send_likes_for_user(
+            strings=self.strings,
             bot=self.bot,
             db=self.database,
             preload=self.preload,
