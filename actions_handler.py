@@ -67,4 +67,3 @@ bot.infinity_polling()
 # todo: create questionnaires
 # todo: improve landing
 # todo: switch database to sqlite and merge preloading with database
-# todo: figure out what to do with removing likes when scrolling them
