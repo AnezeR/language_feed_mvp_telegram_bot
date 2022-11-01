@@ -8,6 +8,11 @@ from preload import ContentPreload
 from strings.strings import get_strings_for_user
 
 
+def translate_text(text: str) -> str:
+    trans = Translator()
+    return trans.translate(text, dest='en' if trans.detect(text).lang == 'ru' else 'ru').text
+
+
 class Layout:
 
     def __init__(self, strings: dict[str, str]):
@@ -33,7 +38,7 @@ class FirstSettingsLayout(Layout):
 
     def reply_to_prompt(self, message: Message) -> tuple[str, int]:
         if message.text == self.strings['set_preferences']:
-            return '', choosing_language
+            return translate_text(message.text), choosing_language
 
 
 class MainMenuLayout(Layout):
@@ -75,7 +80,7 @@ class MainMenuLayout(Layout):
         elif message.text == self.strings['settings']:
             return '', settings
 
-        return Translator().translate(message.text, dest='ru').text, main_menu
+        return translate_text(message.text), main_menu
 
 
 class SettingsLayout(Layout):
@@ -98,7 +103,7 @@ class SettingsLayout(Layout):
             pass
         elif message.text == self.strings['preferences']:
             return '', choosing_preferences
-        return Translator().translate(message.text, dest='ru').text, settings
+        return translate_text(message.text), settings
 
 
 class ChoosingPreferencesLayout(Layout):
@@ -139,7 +144,7 @@ class ChoosingPreferencesLayout(Layout):
                 self.database.set_user_looking_at_content_type(message.from_user.id, preference)
                 send_test_content_for_content_type(self.bot, self.database, self.preload, message.from_user.id, preference)
                 return '', look_at_content
-        return Translator().translate(message.text, dest='ru').text, choosing_preferences
+        return translate_text(message.text), choosing_preferences
 
 
 class LookAtContentLayout(Layout):
@@ -168,7 +173,7 @@ class LookAtContentLayout(Layout):
         if message.text == self.strings['not_liked']:
             self.database.like_a_content_type_for_user(message.from_user.id, self.content_type)
             return '', look_at_content
-        return Translator().translate(message.text, dest='ru').text, look_at_content
+        return translate_text(message.text), look_at_content
 
 
 class ChoosingLanguageLayout(Layout):
@@ -187,7 +192,7 @@ class ChoosingLanguageLayout(Layout):
             if message.text == language:
                 self.database.set_language_for_user(message.from_user.id, language)
                 return get_strings_for_user(self.database, message.from_user.id)['langauge_is_set_to']+language, choosing_preferences if self.first_time else settings
-        return '', choosing_language
+        return translate_text(message.text), choosing_language
 
 
 class LookingAtLikesLayout(Layout):
@@ -233,7 +238,7 @@ class LookingAtLikesLayout(Layout):
             preload=self.preload,
             tg_user_id=message.from_user.id
         )
-        return '', look_at_likes
+        return translate_text(message.text), look_at_likes
 
 
 def pick_layout(layout_id: int, tg_user_id: int, full_name: str, bot: TeleBot, database: Database, preload: ContentPreload) -> Layout:
