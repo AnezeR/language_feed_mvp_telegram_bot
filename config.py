@@ -8,3 +8,4 @@ class Config:
         self.admin_chat_id = config_file['admin_chat_id']
 
         self.current_content = config_file['current_content']
+        self.update_time = config_file['update_time']
