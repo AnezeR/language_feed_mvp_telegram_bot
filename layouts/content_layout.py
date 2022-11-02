@@ -4,8 +4,7 @@ from enum import Enum
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from telebot import TeleBot
 
-from db import Database
-from preload import ContentPreload
+from database.sqlitedb import Database
 
 
 class LayoutType(Enum):
@@ -28,7 +27,7 @@ class Layout:
 
 
 class NoButtonsContentLayout(Layout):
-    def __init__(self, strings: dict[str, str], content_id: int, bot: TeleBot, db: Database, tg_user_id: int, preload: ContentPreload):
+    def __init__(self, strings: dict[str, str], content_id: int, bot: TeleBot, db: Database, tg_user_id: int):
         Layout.__init__(self, strings)
 
         self.content_id = content_id
@@ -37,37 +36,35 @@ class NoButtonsContentLayout(Layout):
         self.chat_id = tg_user_id
         self.bot = bot
 
-        self.preload = preload
-
     def send_message(self) -> None:
-        val_type = self.db.get_value_type_of_content(self.content_id)
+        val_type = self.db.content_get_val_type(self.content_id)
         if val_type == 'image':
             self.bot.send_photo(
                 chat_id=self.chat_id,
-                photo=self.preload.get_file_id_for_content_id(self.content_id),
+                photo=self.db.content_get_file_id(self.content_id),
                 reply_markup=self._inline_markup
             )
         elif val_type == 'video':
             self.bot.send_video(
                 chat_id=self.chat_id,
-                video=self.preload.get_file_id_for_content_id(self.content_id),
+                video=self.db.content_get_file_id(self.content_id),
                 reply_markup=self._inline_markup
             )
         else:
             self.bot.send_message(
                 chat_id=self.chat_id,
-                text=self.db.get_content_content(self.content_id),
+                text=self.db.content_get_content(self.content_id),
                 reply_markup=self._inline_markup
             )
 
 
 class ContentLayout(NoButtonsContentLayout):
-    def __init__(self, strings: dict[str, str], content_id: int, tg_user_id: int, bot: TeleBot, db: Database, preload: ContentPreload):
-        NoButtonsContentLayout.__init__(self, strings, content_id, bot, db, tg_user_id, preload)
+    def __init__(self, strings: dict[str, str], content_id: int, tg_user_id: int, bot: TeleBot, db: Database):
+        NoButtonsContentLayout.__init__(self, strings, content_id, bot, db, tg_user_id)
 
         self.tg_user_id = tg_user_id
 
-        self.liked = db.is_content_liked_by_user(tg_user_id, content_id)
+        self.liked = db.user_content_is_liked(tg_user_id, content_id)
         self._inline_markup.row(
             InlineKeyboardButton(
                 self.strings['liked'] if self.liked else self.strings['not_liked'],
@@ -80,15 +77,15 @@ class ContentLayout(NoButtonsContentLayout):
                 )
             )
         )
-        content_type = self.db.get_content_types_for_content(self.content_id)[0]
-        if self.liked and not self.db.is_content_type_liked_by_user(self.tg_user_id, content_type):
+        preference_name = self.db.content_get_preference_name(self.content_id)
+        if self.liked and not self.db.user_preference_is_liked(self.tg_user_id, preference_name):
             self._inline_markup.row(
                 InlineKeyboardButton(
-                    self.strings['see_more_of_this_content_1'] + content_type + self.strings['see_more_of_this_content_2'],
+                    self.strings['see_more_of_this_content_1'] + preference_name + self.strings['see_more_of_this_content_2'],
                     callback_data=json.dumps(
                         {
                             'type': LayoutType.content.value,
-                            'action': content_type,
+                            'action': preference_name,
                             'content_id': self.content_id
                         }
                     )
@@ -101,15 +98,15 @@ class ContentLayout(NoButtonsContentLayout):
 
         if data['action'] in ('set_like', 'set_dislike'):
             action = data['action']
-            liked_in_db = self.db.is_content_liked_by_user(self.tg_user_id, self.content_id)
+            liked_in_db = self.db.user_content_is_liked(self.tg_user_id, self.content_id)
             if action == 'set_like' and not liked_in_db:
-                self.db.set_like_for_user(self.tg_user_id, self.content_id)
+                self.db.user_content_add_like(self.tg_user_id, self.content_id)
             elif action == 'set_dislike' and liked_in_db:
-                self.db.remove_like_for_user(self.tg_user_id, self.content_id)
+                self.db.user_content_remove_like(self.tg_user_id, self.content_id)
         else:
-            self.db.like_a_content_type_for_user(self.tg_user_id, self.db.get_content_types_for_content(self.content_id)[0])
+            self.db.user_preference_add_like(self.tg_user_id, self.db.content_get_preference_name(self.content_id))
 
-        self.liked = self.db.is_content_liked_by_user(self.tg_user_id, self.content_id)
+        self.liked = self.db.user_content_is_liked(self.tg_user_id, self.content_id)
 
         new_inline_markup = InlineKeyboardMarkup()
         new_inline_markup.row(
@@ -124,15 +121,15 @@ class ContentLayout(NoButtonsContentLayout):
                 )
             )
         )
-        content_type = self.db.get_content_types_for_content(self.content_id)[0]
-        if self.liked and not self.db.is_content_type_liked_by_user(self.tg_user_id, content_type):
+        preference_name = self.db.content_get_preference_name(self.content_id)
+        if self.liked and not self.db.user_preference_is_liked(self.tg_user_id, preference_name):
             new_inline_markup.row(
                 InlineKeyboardButton(
-                    self.strings['see_more_of_this_content_1'] + content_type + self.strings['see_more_of_this_content_2'],
+                    self.strings['see_more_of_this_content_1'] + preference_name + self.strings['see_more_of_this_content_2'],
                     callback_data=json.dumps(
                         {
                             'type': LayoutType.content.value,
-                            'action': content_type,
+                            'action': preference_name,
                             'content_id': self.content_id
                         }
                     )

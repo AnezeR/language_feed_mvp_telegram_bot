@@ -8,7 +8,19 @@
       <jdbc-url>jdbc:mariadb://localhost:3306/language_feed_mvp_database</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="database.sqlite" uuid="78eb3fb8-2065-4e4c-ad18-c2671cfc04c3">
+    <data-source source="LOCAL" name="database" uuid="fd9e997b-c186-40ce-9aa0-0fd196a4abab">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/database/database.sqlite</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+      <libraries>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.39.2/sqlite-jdbc-3.39.2.jar</url>
+        </library>
+      </libraries>
+    </data-source>
+    <data-source source="LOCAL" name="database.sqlite" uuid="da822f1a-b41a-425c-844f-593b4fe19fa5">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>

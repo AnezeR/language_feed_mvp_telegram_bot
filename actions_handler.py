@@ -5,10 +5,9 @@ import telebot
 
 from strings.strings import get_strings_for_user
 from config import Config
-from db import Database
+from database.sqlitedb import Database
 from layouts import page_layouts
 from layouts.content_layout import LayoutType, ContentLayout
-from preload import ContentPreload
 
 config = Config()
 try:
@@ -17,8 +16,7 @@ except telebot.ExceptionHandler as e:
     print(f'Error connecting to the bot: {e}')
     sys.exit(1)
 
-database = Database(user=config.mariadb_user, password=config.mariadb_password, database=config.mariadb_database)
-preloaded_content = ContentPreload(database, bot, config.admin_chat_id)
+database = Database()
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -32,7 +30,6 @@ def inline_buttons_handling(call: telebot.types.CallbackQuery):
             tg_user_id=call.from_user.id,
             bot=bot,
             db=database,
-            preload=preloaded_content
         )
         layout.handle_callback(call)
 
@@ -40,10 +37,10 @@ def inline_buttons_handling(call: telebot.types.CallbackQuery):
 @bot.message_handler(func=lambda m: True)
 def buttons_and_text_messages_handling(message: telebot.types.Message):
     if not database.user_exists(message.from_user.id):
-        database.create_user(message.from_user.id)
+        database.user_create(message.from_user.id)
 
-        layout = page_layouts.pick_layout(database.get_user_layout(message.from_user.id), message.from_user.id,
-                                          message.from_user.full_name, bot, database, preloaded_content)
+        layout = page_layouts.pick_layout(database.user_get_layout(message.from_user.id), message.from_user.id,
+                                          message.from_user.full_name, bot, database)
         bot.send_message(
             chat_id=message.chat.id,
             text=layout.get_default_message(),
@@ -51,11 +48,11 @@ def buttons_and_text_messages_handling(message: telebot.types.Message):
         )
         return
 
-    layout = page_layouts.pick_layout(database.get_user_layout(message.from_user.id), message.from_user.id, message.from_user.full_name, bot, database, preloaded_content)
+    layout = page_layouts.pick_layout(database.user_get_layout(message.from_user.id), message.from_user.id, message.from_user.full_name, bot, database)
     answer, layout_id = layout.reply_to_prompt(message)
 
-    layout = page_layouts.pick_layout(layout_id, message.from_user.id, message.from_user.full_name, bot, database, preloaded_content)
-    database.set_user_layout(message.from_user.id, layout_id)
+    layout = page_layouts.pick_layout(layout_id, message.from_user.id, message.from_user.full_name, bot, database)
+    database.user_set_layout(message.from_user.id, layout_id)
     bot.send_message(
         chat_id=message.chat.id,
         text=answer if answer else layout.get_default_message(),
@@ -66,5 +63,3 @@ def buttons_and_text_messages_handling(message: telebot.types.Message):
 bot.infinity_polling()
 
 # todo: create questionnaires
-# todo: improve landing
-# todo: switch database to sqlite and merge preloading with database

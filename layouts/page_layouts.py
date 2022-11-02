@@ -1,10 +1,9 @@
 from googletrans import Translator
 from telebot.types import ReplyKeyboardMarkup, Message
 
-import db
 from content_sending import *
+from database.sqlitedb import Language
 from layouts.page_layout_ids import *
-from preload import ContentPreload
 from strings.strings import get_strings_for_user
 
 
@@ -42,14 +41,13 @@ class FirstSettingsLayout(Layout):
 
 
 class MainMenuLayout(Layout):
-    def __init__(self, strings: dict[str, str], name: str, bot: TeleBot, database: Database, preload: ContentPreload):
+    def __init__(self, strings: dict[str, str], name: str, bot: TeleBot, database: Database):
         Layout.__init__(self, strings)
 
         self.tg_user_name = name
 
         self.bot = bot
         self.database = database
-        self.preload = preload
 
         self._default_message = self.strings['main_menu_thing'] + f'{self.tg_user_name}!'
 
@@ -63,17 +61,15 @@ class MainMenuLayout(Layout):
                 bot=self.bot,
                 db=self.database,
                 tg_user_id=message.from_user.id,
-                preload=self.preload
             )
             return self.strings['feed_for_today_thing'] + self.tg_user_name, main_menu
         elif message.text == self.strings['likes']:
-            self.database.buffer_likes_for_user(message.from_user.id)
-            if self.database.get_buffered_likes_count_for_user(message.from_user.id):
+            self.database.user_likes_buffer(message.from_user.id)
+            if self.database.user_likes_get_buffered_likes_count(message.from_user.id):
                 send_likes_for_user(
                     self.strings,
                     bot=self.bot,
                     db=self.database,
-                    preload=self.preload,
                     tg_user_id=message.from_user.id
                 )
                 return '', look_at_likes
@@ -109,14 +105,13 @@ class SettingsLayout(Layout):
 
 
 class ChoosingPreferencesLayout(Layout):
-    def __init__(self, strings: dict[str, str], tg_user_id: int, bot: TeleBot, database: Database, preload: ContentPreload):
+    def __init__(self, strings: dict[str, str], tg_user_id: int, bot: TeleBot, database: Database):
         Layout.__init__(self, strings)
 
         self.bot = bot
         self.database = database
-        self.preload = preload
 
-        self.first_time = self.database.are_preferences_not_set(tg_user_id)
+        self.first_time = self.database.user_get_day_of_feed(tg_user_id) == 0
 
         self._default_message = self.strings['choose_your_preferences']
 
@@ -124,39 +119,39 @@ class ChoosingPreferencesLayout(Layout):
             self._keyboard_markup.row(self.strings['finish_setting_preferences'])
         else:
             self._keyboard_markup.row(self.strings['return_to_settings'])
-        for preference in self.database.get_content_types():
-            like_button = self.strings['liked'] if self.database.is_content_type_liked_by_user(tg_user_id, preference) else self.strings['not_liked']
+        for preference in self.database.preference_get_all_preferences():
+            like_button = self.strings['liked'] if self.database.user_preference_is_liked(tg_user_id, preference) else self.strings['not_liked']
             self._keyboard_markup.row(preference + f' {like_button}')
 
     def reply_to_prompt(self, message: Message) -> tuple[str, int]:
-        if not self.database.are_there_zero_preferences(message.from_user.id):
+        if self.database.user_preferences_are_set(message.from_user.id):
             if self.first_time and message.text == self.strings['finish_setting_preferences']:
-                self.database.end_setting_preferences_and_set_first_day(message.from_user.id)
-                send_daily_content_for_user(self.strings, self.bot, self.database, self.preload, message.from_user.id)
+                self.database.user_increase_day_of_feed(message.from_user.id)
+                send_daily_content_for_user(self.strings, self.bot, self.database, message.from_user.id)
                 return '', main_menu
             if (not self.first_time) and message.text == self.strings['return_to_settings']:
                 return '', settings
 
-        for preference in self.database.get_content_types():
-            preference_liked = self.database.is_content_type_liked_by_user(message.from_user.id, preference)
+        for preference in self.database.preference_get_all_preferences():
+            preference_liked = self.database.user_preference_is_liked(message.from_user.id, preference)
             like_button = self.strings['liked'] if preference_liked else self.strings['not_liked']
             check_string = preference + ' ' + like_button
 
             if message.text == check_string:
-                self.database.set_user_looking_at_content_type(message.from_user.id, preference)
-                send_test_content_for_content_type(self.strings, self.bot, self.database, self.preload, message.from_user.id, preference)
+                self.database.user_set_looking_at_preference(message.from_user.id, preference)
+                send_test_content_for_preference(self.strings, self.bot, self.database, message.from_user.id, preference)
                 return '', look_at_content
         return translate_text(message.text), choosing_preferences
 
 
-class LookAtContentLayout(Layout):
+class LookAtPreferenceLayout(Layout):
     def __init__(self, strings: dict[str, str], tg_user_id: int, database: Database):
         Layout.__init__(self, strings)
 
         self.database = database
-        self.content_type = self.database.get_content_type_user_is_looking_at(tg_user_id)
+        self.preference = self.database.user_get_looking_at_preference(tg_user_id)
 
-        liked = self.database.is_content_type_liked_by_user(tg_user_id, self.content_type)
+        liked = self.database.user_preference_is_liked(tg_user_id, self.preference)
 
         if liked:
             self._default_message = self.strings['you_do_like_this_type_of_content']
@@ -167,13 +162,13 @@ class LookAtContentLayout(Layout):
 
     def reply_to_prompt(self, message: Message) -> tuple[str, int]:
         if message.text == self.strings['look_at_other_content']:
-            self.database.set_user_looking_at_content_type(message.from_user.id, None)
+            self.database.user_set_looking_at_preference(message.from_user.id, None)
             return '', choosing_preferences
         if message.text == self.strings['liked']:
-            self.database.remove_like_a_content_type_for_user(message.from_user.id, self.content_type)
+            self.database.user_preference_remove_like(message.from_user.id, self.preference)
             return '', look_at_content
         if message.text == self.strings['not_liked']:
-            self.database.like_a_content_type_for_user(message.from_user.id, self.content_type)
+            self.database.user_preference_add_like(message.from_user.id, self.preference)
             return '', look_at_content
         return translate_text(message.text), look_at_content
 
@@ -183,30 +178,29 @@ class ChoosingLanguageLayout(Layout):
         Layout.__init__(self, strings)
 
         self.database = database
-        self.first_time = self.database.are_preferences_not_set(tg_user_id)
+        self.first_time = self.database.user_get_day_of_feed(tg_user_id) == 0
 
         self._default_message = self.strings['choose_the_language']
-        for language in db.Language:
+        for language in Language:
             self._keyboard_markup.row(language)
 
     def reply_to_prompt(self, message: Message) -> tuple[str, int]:
-        for language in db.Language:
+        for language in Language:
             if message.text == language:
-                self.database.set_language_for_user(message.from_user.id, language)
+                self.database.user_set_language(message.from_user.id, language)
                 return get_strings_for_user(self.database, message.from_user.id)['langauge_is_set_to']+language, choosing_preferences if self.first_time else settings
         return translate_text(message.text), choosing_language
 
 
 class LookingAtLikesLayout(Layout):
-    def __init__(self, strings: dict[str, str], tg_user_id: int, full_name: str, bot: TeleBot, database: Database, preload: ContentPreload):
+    def __init__(self, strings: dict[str, str], tg_user_id: int, full_name: str, bot: TeleBot, database: Database):
         Layout.__init__(self, strings)
 
         self.database = database
         self.bot = bot
-        self.preload = preload
 
-        number_of_likes = self.database.get_buffered_likes_count_for_user(tg_user_id)
-        self.current_page = self.database.get_current_likes_page_for_user(tg_user_id)
+        number_of_likes = self.database.user_likes_get_buffered_likes_count(tg_user_id)
+        self.current_page = self.database.user_likes_get_current_page(tg_user_id)
 
         self._keyboard_markup.row(self.strings['return_to_the_main_menu'])
 
@@ -227,41 +221,46 @@ class LookingAtLikesLayout(Layout):
 
     def reply_to_prompt(self, message: Message) -> tuple[str, int]:
         if message.text == self.strings['return_to_the_main_menu']:
-            self.database.set_current_likes_page_for_user(message.from_user.id, 0)
-            self.database.delete_buffered_likes_for_user(message.from_user.id)
+            self.database.user_likes_set_current_page(message.from_user.id, 0)
+            self.database.user_likes_delete_buffer(message.from_user.id)
             return '', main_menu
         if message.text == self.strings['next_page']:
-            self.database.set_current_likes_page_for_user(message.from_user.id, self.current_page + 1)
+            self.database.user_likes_set_current_page(message.from_user.id, self.current_page + 1)
+            send_likes_for_user(
+                strings=self.strings,
+                bot=self.bot,
+                db=self.database,
+                tg_user_id=message.from_user.id
+            )
             return '', look_at_likes
         if message.text == self.strings['previous_page']:
-            self.database.set_current_likes_page_for_user(message.from_user.id, self.current_page - 1)
+            self.database.user_likes_set_current_page(message.from_user.id, self.current_page - 1)
+            send_likes_for_user(
+                strings=self.strings,
+                bot=self.bot,
+                db=self.database,
+                tg_user_id=message.from_user.id
+            )
             return '', look_at_likes
-        send_likes_for_user(
-            strings=self.strings,
-            bot=self.bot,
-            db=self.database,
-            preload=self.preload,
-            tg_user_id=message.from_user.id
-        )
         return translate_text(message.text), look_at_likes
 
 
-def pick_layout(layout_id: int, tg_user_id: int, full_name: str, bot: TeleBot, database: Database, preload: ContentPreload) -> Layout:
+def pick_layout(layout_id: int, tg_user_id: int, full_name: str, bot: TeleBot, database: Database) -> Layout:
     strings = get_strings_for_user(database, tg_user_id)
 
     if layout_id == first_settings:
         return FirstSettingsLayout(strings)
     if layout_id == main_menu:
-        return MainMenuLayout(strings, full_name, bot, database, preload)
+        return MainMenuLayout(strings, full_name, bot, database)
     if layout_id == settings:
         return SettingsLayout(strings, full_name, bot, database)
     if layout_id == choosing_language:
         return ChoosingLanguageLayout(strings, tg_user_id, database)
     if layout_id == choosing_preferences:
-        return ChoosingPreferencesLayout(strings, tg_user_id, bot, database, preload)
+        return ChoosingPreferencesLayout(strings, tg_user_id, bot, database)
     if layout_id == look_at_content:
-        return LookAtContentLayout(strings, tg_user_id, database)
+        return LookAtPreferenceLayout(strings, tg_user_id, database)
     if layout_id == look_at_likes:
-        return LookingAtLikesLayout(strings, tg_user_id, full_name, bot, database, preload)
+        return LookingAtLikesLayout(strings, tg_user_id, full_name, bot, database)
 
-    return MainMenuLayout(strings, full_name, bot, database, preload)
+    return MainMenuLayout(strings, full_name, bot, database)
