@@ -1,3 +1,5 @@
+VACUUM;
+
 CREATE TABLE preferences(
     preference_name TEXT PRIMARY KEY,
     preference_description TEXT

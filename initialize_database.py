@@ -11,14 +11,10 @@ from concurrent.futures import ThreadPoolExecutor
 """Getting path to the script directory for further use in commands and loading files"""
 path_to_script_dir = Path(os.path.dirname(os.path.abspath(__file__)))
 
-"""Getting config for preloading"""
-config = Config()
-
-"""Initializing database: cleaning it and loading init script to it"""
+"""Getting config and database"""
 database = Database()
-database.vacuum()
-path_to_db_dir = path_to_script_dir / 'database'
-os.system(f'sqlite3 {path_to_db_dir}/database.sqlite < {path_to_db_dir}/init.sql')
+database.execute_init_script()
+config = Config()
 
 """Adding content to the database"""
 

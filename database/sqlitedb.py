@@ -20,19 +20,20 @@ class Language(StrEnum):
 class Database:
     def __init__(self):
         try:
-            print(f'{os.path.dirname(__file__)}/database.sqlite')
-            self.__conn = sqlite3.connect(f'{os.path.dirname(__file__)}/database.sqlite', check_same_thread=False)
+            self.__dir = os.path.dirname(__file__)
+            self.__conn = sqlite3.connect(f'{self.__dir}/database.sqlite', check_same_thread=False)
         except sqlite3.Error as e:
             print(f"Error connecting to sqlite3: {e}")
             raise e
 
-    def vacuum(self):
-        cursor = self.__conn.cursor()
-        cursor.execute("VACUUM")
-        self.__conn.commit()
-
     def close(self) -> None:
         self.__conn.close()
+
+    def execute_init_script(self) -> None:
+        cursor = self.__conn.cursor()
+        cursor.executescript(open(f'{self.__dir}/init.sql').read())
+        self.__conn.commit()
+        cursor.close()
 
     """Preferences section"""
 

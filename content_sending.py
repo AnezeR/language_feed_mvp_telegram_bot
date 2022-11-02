@@ -2,7 +2,6 @@ import random
 
 from telebot import TeleBot
 
-from config import Config
 from database.sqlitedb import Database
 from layouts.content_layout import ContentLayout, NoButtonsContentLayout
 from strings.strings import get_strings_for_user
@@ -34,15 +33,12 @@ def send_test_content_for_preference(strings: dict[str, str], bot: TeleBot, db: 
         NoButtonsContentLayout(strings, content_id, bot, db, tg_user_id).send_message()
 
 
-if __name__ == '__main__':
-    config = Config()
-    __bot = TeleBot(config.telegram_bot_api_key)
-    __database = Database()
+def send_content_to_users(bot: TeleBot, database: Database):
 
-    for __tg_user_id in __database.user_get_all_users():
+    for tg_user_id in database.user_get_all_users():
         try:
-            __strings = get_strings_for_user(__database, __tg_user_id)
-            send_daily_content_for_user(__strings, __bot, __database, __tg_user_id)
-            __database.user_increase_day_of_feed(__tg_user_id)
+            database.user_increase_day_of_feed(tg_user_id)
+            strings = get_strings_for_user(database, tg_user_id)
+            send_daily_content_for_user(strings, bot, database, tg_user_id)
         except Exception:
             continue
