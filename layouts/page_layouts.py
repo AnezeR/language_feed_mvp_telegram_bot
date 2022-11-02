@@ -37,7 +37,8 @@ class FirstSettingsLayout(Layout):
 
     def reply_to_prompt(self, message: Message) -> tuple[str, int]:
         if message.text == self.strings['set_preferences']:
-            return translate_text(message.text), choosing_language
+            return '', choosing_language
+        return translate_text(message.text), first_settings
 
 
 class MainMenuLayout(Layout):
@@ -121,7 +122,7 @@ class ChoosingPreferencesLayout(Layout):
             self._keyboard_markup.row(self.strings['return_to_settings'])
         for preference in self.database.preference_get_all_preferences():
             like_button = self.strings['liked'] if self.database.user_preference_is_liked(tg_user_id, preference) else self.strings['not_liked']
-            self._keyboard_markup.row(preference + f' {like_button}')
+            self._keyboard_markup.row(self.database.preference_get_description(preference) + f' {like_button}')
 
     def reply_to_prompt(self, message: Message) -> tuple[str, int]:
         if self.database.user_preferences_are_set(message.from_user.id):
@@ -135,7 +136,7 @@ class ChoosingPreferencesLayout(Layout):
         for preference in self.database.preference_get_all_preferences():
             preference_liked = self.database.user_preference_is_liked(message.from_user.id, preference)
             like_button = self.strings['liked'] if preference_liked else self.strings['not_liked']
-            check_string = preference + ' ' + like_button
+            check_string = self.database.preference_get_description(preference) + ' ' + like_button
 
             if message.text == check_string:
                 self.database.user_set_looking_at_preference(message.from_user.id, preference)

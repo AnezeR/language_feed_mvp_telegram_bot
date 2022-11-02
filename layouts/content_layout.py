@@ -78,10 +78,11 @@ class ContentLayout(NoButtonsContentLayout):
             )
         )
         preference_name = self.db.content_get_preference_name(self.content_id)
+        preference_description = self.db.preference_get_description(preference_name)
         if self.liked and not self.db.user_preference_is_liked(self.tg_user_id, preference_name):
             self._inline_markup.row(
                 InlineKeyboardButton(
-                    self.strings['see_more_of_this_content_1'] + preference_name + self.strings['see_more_of_this_content_2'],
+                    self.strings['see_more_of_this_content_1'] + preference_description + self.strings['see_more_of_this_content_2'],
                     callback_data=json.dumps(
                         {
                             'type': LayoutType.content.value,
@@ -122,10 +123,11 @@ class ContentLayout(NoButtonsContentLayout):
             )
         )
         preference_name = self.db.content_get_preference_name(self.content_id)
+        preference_description = self.db.preference_get_description(preference_name)
         if self.liked and not self.db.user_preference_is_liked(self.tg_user_id, preference_name):
             new_inline_markup.row(
                 InlineKeyboardButton(
-                    self.strings['see_more_of_this_content_1'] + preference_name + self.strings['see_more_of_this_content_2'],
+                    self.strings['see_more_of_this_content_1'] + preference_description + self.strings['see_more_of_this_content_2'],
                     callback_data=json.dumps(
                         {
                             'type': LayoutType.content.value,

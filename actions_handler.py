@@ -68,4 +68,3 @@ bot.infinity_polling()
 
 # todo: create questionnaires
 # todo: improve landing
-
