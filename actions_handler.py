@@ -8,11 +8,14 @@ import schedule
 import telebot
 
 from strings.strings import get_strings_for_user
-from config import Config
+from config.config import Config
 from database.sqlitedb import Database
 from layouts import page_layouts
 from layouts.content_layout import LayoutType, ContentLayout
 from content_sending import send_content_to_users
+from initialize_database import check_if_database_exists
+
+check_if_database_exists()
 
 config = Config()
 try:

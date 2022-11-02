@@ -21,7 +21,7 @@ class Database:
     def __init__(self):
         try:
             self.__dir = os.path.dirname(__file__)
-            self.__conn = sqlite3.connect(f'{self.__dir}/database.sqlite', check_same_thread=False)
+            self.__conn = sqlite3.connect(f'{self.__dir}/database_volume/database.sqlite', check_same_thread=False)
         except sqlite3.Error as e:
             print(f"Error connecting to sqlite3: {e}")
             raise e
