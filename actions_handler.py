@@ -64,6 +64,7 @@ bot.infinity_polling()
 
 # todo: make the bot be able to run on different content
 # todo: make a docker container for this bot
+# todo: make init at least a bit nicer
 
 # todo: create questionnaires
 # todo: improve landing

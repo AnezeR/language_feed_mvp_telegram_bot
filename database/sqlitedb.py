@@ -14,6 +14,9 @@ class Language(StrEnum):
     russian = 'Русский'
 
 
+# todo: try making working wrappers because this looks poorly
+
+
 class Database:
     def __init__(self):
         try:
