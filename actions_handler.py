@@ -62,4 +62,9 @@ def buttons_and_text_messages_handling(message: telebot.types.Message):
 
 bot.infinity_polling()
 
+# todo: make the bot be able to run on different content
+# todo: make a docker container for this bot
+
 # todo: create questionnaires
+# todo: improve landing
+
