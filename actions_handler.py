@@ -66,7 +66,7 @@ def buttons_and_text_messages_handling(message: telebot.types.Message):
 
 
 def pending_schedule():
-    schedule.every().minute.do(send_content_to_users, bot, database)
+    schedule.every().day.at(config.update_time).do(send_content_to_users, bot, database)
     while True:
         schedule.run_pending()
         time.sleep(1)
@@ -76,10 +76,7 @@ Thread(target=pending_schedule).start()
 
 bot.infinity_polling()
 
-# todo: get crontab to work with docker
 # todo: make the bot be able to run on different content
-# todo: make a docker container for this bot
-# todo: make init at least a bit nicer
 
 # todo: create questionnaires
 # todo: improve landing
