@@ -42,3 +42,10 @@ CREATE TABLE user_preferences(
     preference_name TEXT REFERENCES preferences(preference_name),
     PRIMARY KEY (tg_user_id, preference_name)
 );
+
+CREATE TABLE IF NOT EXISTS user_activity (
+    time_ TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tg_user_id INTEGER,
+    type TEXT,
+    additional_information TEXT
+)

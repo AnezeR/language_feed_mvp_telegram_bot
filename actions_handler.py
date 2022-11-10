@@ -47,25 +47,28 @@ def buttons_and_text_messages_handling(message: telebot.types.Message):
     if not database.user_exists(message.from_user.id):
         database.user_create(message.from_user.id)
 
-        layout = page_layouts.pick_layout(database.user_get_layout(message.from_user.id), message.from_user.id,
-                                          message.from_user.full_name, bot, database)
+        answer_layout = page_layouts.pick_layout(database.user_get_layout(message.from_user.id), message.from_user.id,
+                                                 message.from_user.full_name, bot, database)
         bot.send_message(
             chat_id=message.chat.id,
-            text=layout.get_default_message(),
-            reply_markup=layout.get_keyboard_markup()
+            text=answer_layout.get_default_message(),
+            reply_markup=answer_layout.get_keyboard_markup()
         )
         return
 
-    layout = page_layouts.pick_layout(database.user_get_layout(message.from_user.id), message.from_user.id, message.from_user.full_name, bot, database)
-    answer, layout_id = layout.reply_to_prompt(message)
+    answer_layout_id = database.user_get_layout(message.from_user.id)
+    answer_layout = page_layouts.pick_layout(answer_layout_id, message.from_user.id, message.from_user.full_name, bot, database)
+    answer, display_layout_id = answer_layout.reply_to_prompt(message)
 
-    layout = page_layouts.pick_layout(layout_id, message.from_user.id, message.from_user.full_name, bot, database)
-    database.user_set_layout(message.from_user.id, layout_id)
+    display_layout = page_layouts.pick_layout(display_layout_id, message.from_user.id, message.from_user.full_name, bot, database)
+    database.user_set_layout(message.from_user.id, display_layout_id)
     bot.send_message(
         chat_id=message.chat.id,
-        text=answer if answer else layout.get_default_message(),
-        reply_markup=layout.get_keyboard_markup()
+        text=answer if answer else display_layout.get_default_message(),
+        reply_markup=display_layout.get_keyboard_markup()
     )
+
+    database.log_activity(message.from_user.id, "switch_page", {"start": answer_layout_id, "destination": display_layout_id})
 
 
 def pending_schedule():

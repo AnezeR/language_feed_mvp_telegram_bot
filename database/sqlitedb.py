@@ -1,4 +1,7 @@
+import json
 import sqlite3
+from typing import Any
+
 from strenum import StrEnum
 import os
 
@@ -285,3 +288,10 @@ class Database:
         result = [content[0] for content in cursor.fetchall()]
         cursor.close()
         return result
+
+    """Activity logging section"""
+    def log_activity(self, tg_user_id: int, activity_type: str, additional_info: dict[str, str | int | bool]) -> None:
+        cursor = self.__conn.cursor()
+        cursor.execute("INSERT INTO user_activity (tg_user_id, type, additional_information) VALUES (?, ?, ?)", (tg_user_id, activity_type, json.dumps(additional_info)))
+        cursor.close()
+        self.__conn.commit()

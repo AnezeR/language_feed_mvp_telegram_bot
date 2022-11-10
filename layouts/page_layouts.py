@@ -121,7 +121,8 @@ class ChoosingPreferencesLayout(Layout):
         else:
             self._keyboard_markup.row(self.strings['return_to_settings'])
         for preference in self.database.preference_get_all_preferences():
-            like_button = self.strings['liked'] if self.database.user_preference_is_liked(tg_user_id, preference) else self.strings['not_liked']
+            like_button = self.strings['liked'] if self.database.user_preference_is_liked(tg_user_id, preference) else \
+            self.strings['not_liked']
             self._keyboard_markup.row(self.database.preference_get_description(preference) + f' {like_button}')
 
     def reply_to_prompt(self, message: Message) -> tuple[str, int]:
@@ -140,7 +141,8 @@ class ChoosingPreferencesLayout(Layout):
 
             if message.text == check_string:
                 self.database.user_set_looking_at_preference(message.from_user.id, preference)
-                send_test_content_for_preference(self.strings, self.bot, self.database, message.from_user.id, preference)
+                send_test_content_for_preference(self.strings, self.bot, self.database, message.from_user.id,
+                                                 preference)
                 return '', look_at_content
         return translate_text(message.text), choosing_preferences
 
@@ -167,8 +169,18 @@ class LookAtPreferenceLayout(Layout):
             return '', choosing_preferences
         if message.text == self.strings['liked']:
             self.database.user_preference_remove_like(message.from_user.id, self.preference)
+            self.database.log_activity(message.from_user.id, "remove_like_preference",
+                                       {
+                                           "content_id": None,
+                                           "preference_name": self.preference,
+                                       })
             return '', look_at_content
         if message.text == self.strings['not_liked']:
+            self.database.log_activity(message.from_user.id, "add_like_preference",
+                                       {
+                                           "content_id": None,
+                                           "preference_name": self.preference,
+                                       })
             self.database.user_preference_add_like(message.from_user.id, self.preference)
             return '', look_at_content
         return translate_text(message.text), look_at_content
@@ -189,7 +201,7 @@ class ChoosingLanguageLayout(Layout):
         for language in Language:
             if message.text == language:
                 self.database.user_set_language(message.from_user.id, language)
-                return get_strings_for_user(self.database, message.from_user.id)['langauge_is_set_to']+language, choosing_preferences if self.first_time else settings
+                return get_strings_for_user(self.database, message.from_user.id)['langauge_is_set_to'] + language, choosing_preferences if self.first_time else settings
         return translate_text(message.text), choosing_language
 
 

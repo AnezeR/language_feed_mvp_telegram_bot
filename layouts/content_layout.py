@@ -65,6 +65,9 @@ class ContentLayout(NoButtonsContentLayout):
         self.tg_user_id = tg_user_id
 
         self.liked = db.user_content_is_liked(tg_user_id, content_id)
+        self.preference_name = self.db.content_get_preference_name(self.content_id)
+        self.preference_description = self.db.preference_get_description(self.preference_name)
+        self.is_test_content = not self.db.user_preference_is_liked(self.tg_user_id, self.preference_name)
         self._inline_markup.row(
             InlineKeyboardButton(
                 self.strings['liked'] if self.liked else self.strings['not_liked'],
@@ -77,16 +80,14 @@ class ContentLayout(NoButtonsContentLayout):
                 )
             )
         )
-        preference_name = self.db.content_get_preference_name(self.content_id)
-        preference_description = self.db.preference_get_description(preference_name)
-        if self.liked and not self.db.user_preference_is_liked(self.tg_user_id, preference_name):
+        if self.liked and self.is_test_content:
             self._inline_markup.row(
                 InlineKeyboardButton(
-                    self.strings['see_more_of_this_content_1'] + preference_description + self.strings['see_more_of_this_content_2'],
+                    self.strings['see_more_of_this_content_1'] + self.preference_description + self.strings['see_more_of_this_content_2'],
                     callback_data=json.dumps(
                         {
                             'type': LayoutType.content.value,
-                            'action': preference_name,
+                            'action': self.preference_name,
                             'content_id': self.content_id
                         }
                     )
@@ -104,8 +105,20 @@ class ContentLayout(NoButtonsContentLayout):
                 self.db.user_content_add_like(self.tg_user_id, self.content_id)
             elif action == 'set_dislike' and liked_in_db:
                 self.db.user_content_remove_like(self.tg_user_id, self.content_id)
+
+            self.db.log_activity(self.tg_user_id, action,
+                                 {
+                                     "content_id": self.content_id,
+                                     "is_test_content": self.is_test_content
+                                 })
         else:
-            self.db.user_preference_add_like(self.tg_user_id, self.db.content_get_preference_name(self.content_id))
+            self.is_test_content = False
+            self.db.user_preference_add_like(self.tg_user_id, self.preference_name)
+            self.db.log_activity(self.tg_user_id, "add_like_preference",
+                                 {
+                                     "content_id": self.content_id,
+                                     "preference_name": self.preference_name
+                                 })
 
         self.liked = self.db.user_content_is_liked(self.tg_user_id, self.content_id)
 
@@ -122,16 +135,14 @@ class ContentLayout(NoButtonsContentLayout):
                 )
             )
         )
-        preference_name = self.db.content_get_preference_name(self.content_id)
-        preference_description = self.db.preference_get_description(preference_name)
-        if self.liked and not self.db.user_preference_is_liked(self.tg_user_id, preference_name):
+        if self.liked and self.is_test_content:
             new_inline_markup.row(
                 InlineKeyboardButton(
-                    self.strings['see_more_of_this_content_1'] + preference_description + self.strings['see_more_of_this_content_2'],
+                    self.strings['see_more_of_this_content_1'] + self.preference_description + self.strings['see_more_of_this_content_2'],
                     callback_data=json.dumps(
                         {
                             'type': LayoutType.content.value,
-                            'action': preference_name,
+                            'action': self.preference_name,
                             'content_id': self.content_id
                         }
                     )
