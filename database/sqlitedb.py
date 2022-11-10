@@ -1,9 +1,8 @@
 import json
+import os
 import sqlite3
-from typing import Any
 
 from strenum import StrEnum
-import os
 
 
 class ValTypes(StrEnum):

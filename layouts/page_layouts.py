@@ -121,18 +121,23 @@ class ChoosingPreferencesLayout(Layout):
         else:
             self._keyboard_markup.row(self.strings['return_to_settings'])
         for preference in self.database.preference_get_all_preferences():
-            like_button = self.strings['liked'] if self.database.user_preference_is_liked(tg_user_id, preference) else \
-            self.strings['not_liked']
+            like_button = self.strings['liked'] if self.database.user_preference_is_liked(tg_user_id, preference) else self.strings['not_liked']
             self._keyboard_markup.row(self.database.preference_get_description(preference) + f' {like_button}')
 
     def reply_to_prompt(self, message: Message) -> tuple[str, int]:
-        if self.database.user_preferences_are_set(message.from_user.id):
-            if self.first_time and message.text == self.strings['finish_setting_preferences']:
+        preferences_are_set = self.database.user_preferences_are_set(message.from_user.id)
+        if self.first_time and message.text == self.strings['finish_setting_preferences']:
+            if preferences_are_set:
                 self.database.user_increase_day_of_feed(message.from_user.id)
                 send_daily_content_for_user(self.strings, self.bot, self.database, message.from_user.id)
                 return '', main_menu
-            if (not self.first_time) and message.text == self.strings['return_to_settings']:
+            else:
+                return self.strings['choose_your_preferences'], choosing_preferences
+        if (not self.first_time) and message.text == self.strings['return_to_settings']:
+            if preferences_are_set:
                 return '', settings
+            else:
+                return self.strings['choose_your_preferences'], choosing_preferences
 
         for preference in self.database.preference_get_all_preferences():
             preference_liked = self.database.user_preference_is_liked(message.from_user.id, preference)

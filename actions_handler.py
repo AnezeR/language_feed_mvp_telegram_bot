@@ -68,7 +68,10 @@ def buttons_and_text_messages_handling(message: telebot.types.Message):
         reply_markup=display_layout.get_keyboard_markup()
     )
 
-    database.log_activity(message.from_user.id, "switch_page", {"start": answer_layout_id, "destination": display_layout_id})
+    if answer_layout_id != display_layout_id:
+        database.log_activity(message.from_user.id, "switch_page", {"start": answer_layout_id, "destination": display_layout_id})
+    else:
+        database.log_activity(message.from_user.id, "on_page_activity", {"message_text": message.text})
 
 
 def pending_schedule():

@@ -1,5 +1,5 @@
 venv
 .idea
-config/config_volume
-database/database_volume
+config/config_volume/config.json
+database/database_volume/database.sqlite
 content_types
