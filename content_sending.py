@@ -8,6 +8,10 @@ from strings.strings import get_strings_for_user
 
 
 def send_daily_content_for_user(strings: dict[str, str], bot: TeleBot, db: Database, tg_user_id: int) -> None:
+
+    if db.user_get_day_of_feed(tg_user_id) == 7:
+        bot.send_message(tg_user_id, strings['final_message'])
+
     day = db.user_get_day_of_feed(tg_user_id)
 
     content_to_send = list[int]()
@@ -37,8 +41,9 @@ def send_content_to_users(bot: TeleBot, database: Database):
 
     for tg_user_id in database.user_get_all_users():
         try:
-            database.user_increase_day_of_feed(tg_user_id)
-            strings = get_strings_for_user(database, tg_user_id)
-            send_daily_content_for_user(strings, bot, database, tg_user_id)
+            if database.user_get_day_of_feed(tg_user_id) < 7:
+                database.user_increase_day_of_feed(tg_user_id)
+                strings = get_strings_for_user(database, tg_user_id)
+                send_daily_content_for_user(strings, bot, database, tg_user_id)
         except Exception:
             continue
