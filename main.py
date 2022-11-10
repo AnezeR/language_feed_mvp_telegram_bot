@@ -78,9 +78,11 @@ def pending_schedule():
     schedule.every().day.at(config.update_time).do(send_content_to_users, bot, database)
     while True:
         schedule.run_pending()
-        time.sleep(1)
+        time.sleep(10)
 
 
 Thread(target=pending_schedule).start()
 
 bot.infinity_polling()
+
+# check if daily sending works as intended.

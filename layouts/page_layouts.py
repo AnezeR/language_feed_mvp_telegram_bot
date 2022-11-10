@@ -50,7 +50,7 @@ class MainMenuLayout(Layout):
         self.bot = bot
         self.database = database
 
-        self._default_message = self.strings['main_menu_thing'] + f'{self.tg_user_name}!'
+        self._default_message = self.strings['main_menu_thing'] + (f', {self.tg_user_name}!' if self.tg_user_name != '' else '')
 
         self._keyboard_markup.row(self.strings['feed_for_today'])
         self._keyboard_markup.row(self.strings['settings'], self.strings['likes'])
@@ -63,7 +63,7 @@ class MainMenuLayout(Layout):
                 db=self.database,
                 tg_user_id=message.from_user.id,
             )
-            return self.strings['feed_for_today_thing'] + self.tg_user_name, main_menu
+            return self.strings['feed_for_today_thing'] + (f', {self.tg_user_name}!' if self.tg_user_name != '' else ''), main_menu
         elif message.text == self.strings['likes']:
             self.database.user_likes_buffer(message.from_user.id)
             if self.database.user_likes_get_buffered_likes_count(message.from_user.id):

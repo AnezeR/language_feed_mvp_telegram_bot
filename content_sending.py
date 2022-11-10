@@ -7,10 +7,17 @@ from layouts.content_layout import ContentLayout, NoButtonsContentLayout
 from strings.strings import get_strings_for_user
 
 
-def send_daily_content_for_user(strings: dict[str, str], bot: TeleBot, db: Database, tg_user_id: int) -> None:
-
+def __send_daily_feed(strings: dict[str, str], bot: TeleBot, db: Database, tg_user_id: int) -> None:
+    from layouts.page_layouts import pick_layout
+    send_daily_content_for_user(strings, bot, db, tg_user_id)
     if db.user_get_day_of_feed(tg_user_id) == 7:
         bot.send_message(tg_user_id, strings['final_message'])
+    else:
+        layout = pick_layout(db.user_get_layout(tg_user_id), tg_user_id, "", bot, db)
+        bot.send_message(tg_user_id, strings['feed_for_today_thing'], reply_markup=layout.get_keyboard_markup())
+
+
+def send_daily_content_for_user(strings: dict[str, str], bot: TeleBot, db: Database, tg_user_id: int) -> None:
 
     day = db.user_get_day_of_feed(tg_user_id)
 
@@ -44,6 +51,6 @@ def send_content_to_users(bot: TeleBot, database: Database):
             if database.user_get_day_of_feed(tg_user_id) < 7:
                 database.user_increase_day_of_feed(tg_user_id)
                 strings = get_strings_for_user(database, tg_user_id)
-                send_daily_content_for_user(strings, bot, database, tg_user_id)
+                __send_daily_feed(strings, bot, database, tg_user_id)
         except Exception:
             continue
