@@ -34,6 +34,10 @@ def send_daily_content_for_user(strings: dict[str, str], bot: TeleBot, db: Datab
         ContentLayout(strings, content_id, tg_user_id, bot, db).send_message()
 
 
+def send_questionnaires(strings: dict[str, str], bot: TeleBot, db: Database, tg_user_id: int) -> None:
+    pass
+
+
 def send_likes_for_user(strings: dict[str, str], bot: TeleBot, db: Database, tg_user_id: int) -> None:
     for content_id in db.user_likes_get_content_for_current_page(tg_user_id)[::-1]:
         ContentLayout(strings, content_id, tg_user_id, bot, db).send_message()

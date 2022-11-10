@@ -11,6 +11,7 @@ class LayoutType(Enum):
     preference = 'preference'
     content = 'content'
     translation = 'translation'
+    questionnaire_link = 'questionnaire'
 
 
 class Layout:
@@ -25,6 +26,32 @@ class Layout:
     def send_message(self) -> None:
         pass
 
+
+# class QuestionnaireLayout(Layout):
+#     def __init__(self, strings: dict[str, str], bot: TeleBot, db: Database, tg_user_id: int):
+#         Layout.__init__(self, strings)
+#
+#         self.db = db
+#         self.chat_id = tg_user_id
+#         self.bot = bot
+#
+#         self._inline_markup.row(
+#             InlineKeyboardButton(
+#                 text=strings['questionnaire'],
+#                 url='https://docs.google.com/forms/d/e/1FAIpQLSfnTk9cCK6MLlDJR7S-RK4rxkqNx7Lobd7N5Bd9h8OyYSAJwQ/viewform?usp=sharing',
+#                 callback_data={'type': LayoutType.questionnaire_link.value}
+#             )
+#         )
+#
+#     def send_message(self) -> None:
+#         self.bot.send_message(
+#             self.chat_id,
+#             self.strings['questionnaire_prompt'],
+#             reply_markup=self._inline_markup
+#         )
+#
+#     def handle_callback(self, call: CallbackQuery) -> None:
+#
 
 class NoButtonsContentLayout(Layout):
     def __init__(self, strings: dict[str, str], content_id: int, bot: TeleBot, db: Database, tg_user_id: int):

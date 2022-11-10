@@ -85,6 +85,4 @@ Thread(target=pending_schedule).start()
 
 bot.infinity_polling()
 
-# todo: fix initial message
 # todo: send questionnaires
-# todo: check if daily sending works as intended.
