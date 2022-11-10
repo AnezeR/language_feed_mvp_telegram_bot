@@ -48,4 +48,4 @@ CREATE TABLE IF NOT EXISTS user_activity (
     tg_user_id INTEGER,
     type TEXT,
     additional_information TEXT
-)
+);
