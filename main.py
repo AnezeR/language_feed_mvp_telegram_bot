@@ -84,8 +84,3 @@ def pending_schedule():
 Thread(target=pending_schedule).start()
 
 bot.infinity_polling()
-
-# todo: make the bot be able to run on different content
-
-# todo: create questionnaires
-# todo: improve landing
